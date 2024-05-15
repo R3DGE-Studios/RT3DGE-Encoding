@@ -11,7 +11,8 @@ REM Create the destination directory if it doesn't exist
 if not exist "%DEST_DIR%" (
     mkdir "%DEST_DIR%"
 )
-
+rmdir "%DEST_DIR%"
+mkdir "%DEST_DIR%"
 REM Copy the required files from source to destination
 copy "%SOURCE_DIR%\RT3DGE_Encoding.lib" "%DEST_DIR%\"
 copy "%SOURCE_DIR%\RT3DGE_Encoding.dll" "%DEST_DIR%\"
