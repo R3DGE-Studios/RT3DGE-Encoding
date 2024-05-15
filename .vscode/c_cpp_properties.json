@@ -3,7 +3,8 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/vcpkg/packages/nlohmann-json_x64-windows/include"
             ],
             "defines": [
                 "_DEBUG",

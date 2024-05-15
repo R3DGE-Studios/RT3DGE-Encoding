@@ -7,6 +7,7 @@
 #include <locale>
 #include <nlohmann/json.hpp>
 #include <openssl/sha.h>
+#include <random>
 #include "RT3DGE_Encoding.hpp"
 
 namespace RT3DGE_Encoding {
@@ -38,8 +39,10 @@ namespace RT3DGE_Encoding {
 
     // Function to generate a random UTF-8 character (for simplicity, using ASCII range here)
     char32_t generateRandomCharacter() {
-        // Generate a random character between U+0021 and U+007E (printable ASCII)
-        return static_cast<char32_t>(33 + rand() % 94);
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        static std::uniform_int_distribution<> dis(33, 126); // Printable ASCII range
+        return static_cast<char32_t>(dis(gen));
     }
 
     // Function to compute SHA-256 hash of a string
@@ -52,7 +55,7 @@ namespace RT3DGE_Encoding {
 
         std::ostringstream result;
         for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
-            result << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+            result << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[i]);
         }
         return result.str();
     }
@@ -87,7 +90,7 @@ namespace RT3DGE_Encoding {
         nlohmann::json keyJson;
         keyJson["file_hash"] = fileHash;
         for (const auto& pair : substitutionMap) {
-            keyJson["mapping"][converter.to_bytes(pair.first)] = converter.to_bytes(pair.second);
+            keyJson["mapping"][std::to_string(pair.first)] = std::to_string(pair.second);
         }
 
         std::ofstream keyOut(keyFile);
@@ -106,7 +109,7 @@ namespace RT3DGE_Encoding {
         
         nlohmann::json keyJson;
         keyIn >> keyJson;
-        
+
         std::string fileHash = keyJson["file_hash"];
         std::unordered_map<std::string, std::string> mapping = keyJson["mapping"].get<std::unordered_map<std::string, std::string>>();
         
@@ -115,7 +118,7 @@ namespace RT3DGE_Encoding {
         
         std::unordered_map<char32_t, char32_t> reverseMap;
         for (const auto& pair : mapping) {
-            reverseMap[converter.from_bytes(pair.second)] = converter.from_bytes(pair.first);
+            reverseMap[std::stoul(pair.second)] = std::stoul(pair.first);
         }
         
         std::u32string decodedContent;
@@ -135,31 +138,3 @@ namespace RT3DGE_Encoding {
         return decodedHash == fileHash;
     }
 }
-/*
-int main() {
-    std::string inputFile = "input.txt";
-    std::string outputFile = "output.txt";
-    std::string keyFile = "key.json";
-    std::string decodedFile = "decoded.txt";
-
-    try {
-        // Encode the file
-        RT3DGE_Encoding::encodeFile(inputFile, outputFile, keyFile);
-        std::cout << "File encoded successfully." << std::endl;
-
-        // Decode and verify the file
-        bool isVerified = RT3DGE_Encoding::decodeAndVerify(outputFile, keyFile, decodedFile);
-        if (isVerified) {
-            std::cout << "Decoded file verified successfully. Hash matches." << std::endl;
-        } else {
-            std::cout << "Decoded file verification failed. Hash does not match." << std::endl;
-        }
-
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return 1;
-    }
-
-    return 0;
-}
-*/

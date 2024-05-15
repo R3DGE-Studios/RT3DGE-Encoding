@@ -1,2 +1,8 @@
 vcpkg
 cmake
+build
+release
+compressed
+*.zip
+localbuild.bat
+path.bat
